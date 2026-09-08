@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup Page</title>
+</head>
+<body>
+    <div>
+        <h1> User Signup</h1>
+        <form onsubmit="handleFormSubmit(event)">
+           <label for="username">Name</label>
+           <input type="text" id="username" name="username"/>
+           <label for="email">Email</label>
+           <input type="email" id="email" name="email"/>
+            <label for="phoneNumber">Phone Number</label>
+           <input type="tel" id="phoneNumber" name="phoneNumber"/>
+           <label for="password">Password</label>
+           <input type="text" id="password" name="password"/>
+
+           <button type="submit">Submit</button>
+        </form>
+        
+    </div>
+    <script src="./signup.js"></script>
+</body>
+</html>
