@@ -37,8 +37,14 @@ async function authentication(req,res,next){
     
    
     catch(err){
-        console.log(err.message)
-        return res.status(401).json({success:false,message:"Invalid or expried token"})
+        // console.log(err.message)
+        // return res.status(401).json({success:false,message:"Invalid or expried token"})
+        console.log("AUTH ERROR:", err.message)
+
+    return res.status(401).json({
+        success:false,
+        message:err.message
+    })
     }
 
    
