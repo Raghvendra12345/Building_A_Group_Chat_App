@@ -15,6 +15,7 @@ route.post('/login',dbModel.login)
 
 
 route.post('/messages',userAuthentication,chatModel.sendMessage)
+route.get('/allmessages',userAuthentication,chatModel.getMessage)
 
 
 module.exports=route

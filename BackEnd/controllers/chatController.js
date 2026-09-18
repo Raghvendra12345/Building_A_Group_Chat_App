@@ -23,4 +23,16 @@ const sendMessage=async(req,res)=>{
 
 }
 
-module.exports={sendMessage}
+const getMessage=async(req,res)=>{
+    try{
+        const messages=await chatModel.findAll({
+            order:[["createdAt","ASC"]]
+        })
+       return res.status(200).json({success:true,data:messages})
+    }
+    catch(err){
+        console.log(err.message)
+        return res.status(500).json({error:err.message})
+    }
+}
+module.exports={sendMessage,getMessage}

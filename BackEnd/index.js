@@ -1,18 +1,31 @@
 
 
+
+const chatModel=require("./models/chatModel")
+
 const express=require("express")
 const cors=require("cors")
 
 const app=express()
+const http=require("http")
+
 app.use(cors())
 
 const userDB=require('./utils/db')
 const userRoute=require("./routes/userRoutes")
+const socketIO=require("./socket_io")
 
 const  PORT=4700
 
 app.use(express.json())
 app.use('/chat',userRoute)
+
+
+const server=http.createServer(app)
+
+
+
+socketIO(server)
 
 
 
@@ -26,7 +39,7 @@ app.get('/',(req,res)=>[
 userDB
 .sync({force:false})
 .then(()=>{
-      app.listen(PORT,()=>{
+      server.listen(PORT,()=>{
         console.log("server is running fine")
     });
 })
