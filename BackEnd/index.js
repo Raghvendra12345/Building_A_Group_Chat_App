@@ -25,7 +25,9 @@ const server=http.createServer(app)
 
 
 
-socketIO(server)
+const io=socketIO(server)
+
+app.set("io",io)
 
 
 

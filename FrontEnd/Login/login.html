@@ -3,20 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
-</head>
-<body>
-    <div>
-        <form onsubmit="handleFormSubmit(event)">
-            <label for="identifier">Email or Phone Number</label>
-           <input type="text" id="identifier" name="identifier" required/>
-           
-           <label for="password">Password</label>
-           <input type="text" id="password" name="password" required/>
 
-           <button type="submit">Submit</button>
+    <title>Login Page</title>
+
+    <link rel="stylesheet" href="login.css">
+</head>
+
+<body>
+
+    <div class="login-container">
+
+        <div class="logo">C</div>
+
+        <h1>Welcome Back</h1>
+
+        <p class="subtitle">
+            Login to continue to your chat
+        </p>
+
+        <form onsubmit="handleFormSubmit(event)">
+
+            <div class="form-group">
+                <label for="identifier">
+                    Email or Phone Number
+                </label>
+
+                <input
+                    type="text"
+                    id="identifier"
+                    name="identifier"
+                    placeholder="Enter email or phone number"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">
+                    Password
+                </label>
+
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    required
+                >
+            </div>
+
+            <button type="submit">
+                Login
+            </button>
+
         </form>
+          <p id="error-message" style="display:none"></p>
+        <p class="signup-text">
+            Don't have an account?
+            <a href="../Signup/signup.html">Create Account</a>
+        </p>
+
     </div>
+
     <script src="./login.js"></script>
+
 </body>
 </html>

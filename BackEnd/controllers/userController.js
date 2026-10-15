@@ -14,7 +14,7 @@ const signup=async(req,res)=>{
         const {username,email,phoneNumber,password}=req.body
 
         if(!username || !email || !phoneNumber || !password){
-            res.status(404).json({error:"Fill all details"})
+            return res.status(404).json({error:"Fill all details"})
         }
 
         const existingUser=await chatUser.findOne({
@@ -28,7 +28,7 @@ const signup=async(req,res)=>{
         })
 
         if(existingUser){
-            res.status(401).json({error:"User already exist..Please Login"})
+            return res.status(401).json({error:"Email or Phone Number Already exist"})
         }
 
         if(!validator.isStrongPassword(password)){
@@ -86,14 +86,14 @@ const login=async(req,res)=>{
         const result=await bcrypt.compare(password,user.password)
 
            if(!result){
-            return res.status(200).json({success:false,error:"Invalid password"})
+            return res.status(401).json({success:false,error:"Invalid password"})
            }
              
            const token=generateToken(user.id,user.username)
 
            console.log("TOKEN FROM GENERATE:", token);
             
-                return res.status(200).json({success:true,message:"User Logged In Successfully",token})
+                return res.status(200).json({success:true,message:"User Logged In Successfully",token,email:user.email,username: user.username})
             
         
 
@@ -105,6 +105,43 @@ const login=async(req,res)=>{
     }
 }
 
+const searchUser=async(req,res)=>{
+   try{
+
+     const email=req.query.email?.trim().toLowerCase()
+
+     if(!email){
+        return res.status(400).json({success:false,message:"Email is Required"})
+     }
+
+     const user=await chatUser.findOne({
+        where:{email},
+        attributes:["id","username","email"]
+     })
+
+     if (!user) {
+        return res.status(404).json({
+            success: false,
+            message: "User not found"
+        });
+    }
+
+     if(user.id===req.user.userId){
+        return res.status(400).json({success:false,message:"Cannot chat with yourSelf"})
+     }
+     return res.status(200).json({success:true,data:user})
+
+   }
+   catch(error){
+         console.log(error.message);
+
+    return res.status(500).json({
+        success: false,
+        message: "Failed to search user"
+    });
+   }
+
+}
 
 
-module.exports={signup,login}
+module.exports={signup,login,searchUser}

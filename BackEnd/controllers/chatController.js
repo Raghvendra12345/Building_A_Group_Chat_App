@@ -2,6 +2,8 @@ const express=require("express")
 
 const chatModel=require("../models/chatModel")
 
+const {user}=require("../models/index")
+
 const sendMessage=async(req,res)=>{
     try{
        const {message}=req.body
@@ -14,7 +16,15 @@ const sendMessage=async(req,res)=>{
            message:message.trim(),
            userId:req.user.userId
        })
-       return res.status(201).json({success:true,message:"Message send Successfully",data:newMessage})
+
+       const messageWithUser = await chatModel.findByPk(newMessage.id, {
+        include: [{
+            model: user,
+            attributes: ["username"]
+        }]
+       });
+
+       return res.status(201).json({success:true,message:"Message send Successfully",data:messageWithUser})
     }
     catch(error){
          console.log(error.message)
@@ -26,6 +36,11 @@ const sendMessage=async(req,res)=>{
 const getMessage=async(req,res)=>{
     try{
         const messages=await chatModel.findAll({
+
+             include: [{
+             model: user,
+            attributes: ["username"]
+              }],
             order:[["createdAt","ASC"]]
         })
        return res.status(200).json({success:true,data:messages})

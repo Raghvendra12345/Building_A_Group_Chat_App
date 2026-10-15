@@ -1,133 +1,111 @@
-const messageForm = document.getElementById("messageForm");
-const messageInput = document.getElementById("messageInput");
-const messages = document.getElementById("messages");
-
-// Scroll to the latest message when page loads
-
-messages.scrollTop = messages.scrollHeight;
-
-const token=localStorage.getItem("token")
-
-const socket=io("http://localhost:4700",{
-  auth:{token}
-})
-
-socket.on("connect",()=>{
-  console.log("User Connected to server ",socket.id)
-})
-
-// Send message
-
-// messageForm.addEventListener("submit", async function (event) {
-
-async function sendMessages(event) {
-  event.preventDefault();
-
-  const messageText = messageInput.value.trim();
-
-  // Don't send empty message
-
-  if (!messageText) {
-    return;
-  }
-
-  socket.emit("sendMessage",{message:messageText})
-
-    messageInput.value = "";
-
-}
-
-socket.on("receiveMessage",(data)=>{
-      console.log("Received Message : ",data)
 
 
-       const message = document.createElement("div");
 
-    message.classList.add("message", "sent");
+// const socket=io("http://localhost:4700",{
+//   auth:{token}
+// })
+
+
+
+// socket.on("connect_error",(error)=>{
+//   console.log("Connection ERROR ",error.message)
+// })
+
+
+
+  
+
+  // if(!window.roomName){
+  //   alert("Please join a chat  first")
+  //   return
+  // }
+
+  // socket.emit("new-message",{
+  //   message:messageText,
+  //   roomName:window.roomName
+  // })
+
+
+
+// socket.on("new-message",(data)=>{
+    //   console.log("Received Message : ",data)
+       
+    //   const myUsername = localStorage.getItem("username");
+
+    //    const message = document.createElement("div");
+
+    // message.classList.add("message", "sent");
+
+    // if (data.username === myUsername) {
+    //     message.classList.add("message", "sent");
+    // } else {
+    //     message.classList.add("message", "received");
+    // }
 
     // Get current time
 
-    const currentTime =new Date(data.createdAt)
+    // const currentTime =new Date(data.createdAt)
+    // const currentTime =new Date()
 
-    const time = currentTime.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    // const time = currentTime.toLocaleTimeString([], {
+    //   hour: "2-digit",
+    //   minute: "2-digit",
+    // });
 
     // Create message content
 
-    message.innerHTML = `
-        <div class="message-content">
-            <p>${data.message}</p>
-            <span class="timestamp">${time}</span>
-        </div>
-    `;
+    // message.innerHTML = `
+    //     <div class="message-content">
+    //         <p>${data.message}</p>
+    //         <span class="timestamp">${time}</span>
+    //     </div>
+    // `;
 
     // Add message to chat
 
-    messages.appendChild(message);
-    })
+    // messages.appendChild(message);
+    // })
 
   
 
 
 
-      //  const response=await fetch("http://localhost:4700/chat/messages",{
-      //   "method":"POST",
-      //   headers:{
-      //       "Content-Type":"application/json",
-      //       "Authorization":`Bearer ${token}`
-      //   },
-      //   body:JSON.stringify({message:messageText})
-        
-      //  })
+// async function search(event){
+//   event.preventDefault()
 
-      //  const data=await response.json()
+//   const storedEmail=localStorage.getItem("email")
 
-      //  if(!response.ok) throw new Error(data.error || data.message)
+//   if(!storedEmail){
+//     alert("User email not found ")
+//     return;
+//   }
 
-messageForm.addEventListener('submit',sendMessages)
+//   const myEmail=storedEmail.trim().toLowerCase();
+//   const email=event.target.search.value.trim().toLowerCase();
 
-async function load() {
-  try {
-    const token = localStorage.getItem("token");
-    const response = await fetch("http://localhost:4700/chat/allmessages", {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-      },
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || data.message);
-    }
-    console.log("Messages", data.data);
-     
-    data.data.forEach((item)=>{
-        const message=document.createElement('div')
+//   if(!email){
+//     alert("Please enter an email")
+//     return;
+//   }
 
-        message.classList.add("message","sent")
+  // const roomName=[myEmail,email].sort().join(" - ")
 
-        const currentTime=new Date(item.createdAt)
+  // socket.emit("join-room",roomName)
 
-        const time=currentTime.toLocaleTimeString([],{
-               hour:"2-digit",
-               minute:"2-digit"
-        });
+  // window.roomName=roomName
 
-         message.innerHTML = `
-        <div class="message-content">
-            <p>${item.message}</p>
-            <span class="timestamp">${time}</span>
-        </div>
-    `;
+  // alert("Room we Join "+roomName)
+// }
 
-      messages.appendChild(message)
-    })
-    messages.scrollTop=messages.scrollHeight;
 
-  } catch (err) {
-    console.log("Error Loading Message", err.message);
-  }
-}
-load();
+
+
+    
+
+    // Clear current room
+    // window.roomName = null;
+
+    // Disconnect socket
+    // if (socket && socket.connected) {
+    //     socket.disconnect();
+    // }

@@ -19,6 +19,7 @@ async function authentication(req,res,next){
 
 
         const decoded=jwt.verify(authToken,"secretkey")
+        console.log("Decoded token starts")
     
         const user=await chatUser.findByPk(decoded.userId)
 

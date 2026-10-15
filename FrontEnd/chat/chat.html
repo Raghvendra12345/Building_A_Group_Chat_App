@@ -1,87 +1,108 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat UI</title>
-    <link rel="stylesheet" href="chat.css">
+
+    <title>Chat App</title>
+
+    <link rel="stylesheet" href="./chat.css">
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 </head>
+
 <body>
+
+    <!-- Logout button -->
+    <button class="logout-button" onclick="logout()">
+        Logout
+    </button>
+
+
     <div class="chat-container">
 
-        <!-- Chat Header -->
-        <header class="chat-header">
+        <!-- Header -->
+
+        <div class="chat-header">
 
             <div class="profile">
-                <div class="profile-image">K</div>
+
+                <div class="profile-image">
+                    K
+                </div>
 
                 <div class="profile-info">
-                    <h3>Koko</h3>
-                    <span>Online</span>
+                    <h3>Group Chat</h3>
+                    <span id="connection-status">
+                        Connecting...
+                    </span>
                 </div>
+
             </div>
 
-            <div class="header-actions">
-                <button>⋮</button>
+        </div>
+
+
+        <!-- Room Search -->
+
+        <div class="room-search">
+
+            <form id="searchForm" class="search-form">
+
+                <input
+                    type="email"
+                    id="emailInput"
+                    name="search"
+                    placeholder="Enter user's email"
+                    autocomplete="off"
+                    required
+                >
+
+                <button type="submit" id="joinRoomButton">
+                    Join
+                </button>
+
+            </form>
+
+            <div class="room-status">
+                <span id="room-status-text">
+                    Enter an email to join a chat
+                </span>
             </div>
 
-        </header>
+        </div>
 
 
-        <!-- Chat Messages -->
-        <main class="messages" id="messages">
+        <!-- Private Chat Section -->
+<section id="privateChatSection" style="display: none;">
+    <h2 id="privateChatTitle">Private Chat</h2>
 
-            <div class="message received">
-                <div class="message-content">
-                    <p>Hello! How are you?</p>
-                    <span class="timestamp">10:30 AM</span>
-                </div>
-            </div>
+    <div id="privateMessages"></div>
 
-
-            <div class="message sent">
-                <div class="message-content">
-                    <p>I'm good! How are you?</p>
-                    <span class="timestamp">10:31 AM</span>
-                </div>
-            </div>
-
-
-            <div class="message received">
-                <div class="message-content">
-                    <p>I'm doing great 😊</p>
-                    <span class="timestamp">10:32 AM</span>
-                </div>
-            </div>
+    <form id="privateMessageForm">
+        <input
+            type="text"
+            id="privateMessageInput"
+            placeholder="Type a private message..."
+            required
+        />
+        <button type="submit">Send</button>
+    </form>
+</section>
 
 
-            <div class="message sent">
-                <div class="message-content">
-                    <p>That's great to hear!</p>
-                    <span class="timestamp">10:33 AM</span>
-                </div>
-            </div>
+        <!-- Messages -->
 
+        <div class="messages" id="messages">
 
-            <div class="message received">
-                <div class="message-content">
-                    <p>Are you working on the chat application?</p>
-                    <span class="timestamp">10:34 AM</span>
-                </div>
-            </div>
-
-
-            <div class="message sent">
-                <div class="message-content">
-                    <p>Yes, I'm building the chat window now.</p>
-                    <span class="timestamp">10:35 AM</span>
-                </div>
-            </div>
-
-        </main>
+        </div>
 
 
         <!-- Message Input -->
+
         <form class="message-form" id="messageForm">
 
             <input
@@ -91,7 +112,7 @@
                 autocomplete="off"
             >
 
-            <button type="submit" id="sendButton">
+            <button type="submit">
                 ➤
             </button>
 
@@ -99,7 +120,9 @@
 
     </div>
 
-    <script src="http://localhost:4700/socket.io/socket.io.js"></script>
-    <script src="./chat.js"></script>
+
+    <script src="./chat1.js"></script>
+
 </body>
+
 </html>

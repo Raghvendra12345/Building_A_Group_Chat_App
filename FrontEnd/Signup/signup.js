@@ -1,4 +1,6 @@
 async function handleFormSubmit(event) {
+
+  
   try {
     event.preventDefault();
 
@@ -17,11 +19,23 @@ async function handleFormSubmit(event) {
       },
       body: JSON.stringify(signupDetail),
     });
+    const data=await response.json()
 
     if (response.status == 201) {
       window.location.href = "../Login/login.html";
-    } else throw new Error("Failed  to Login");
+    } else{ 
+      showMessage(data.error || data.message || "Signup Failed")
+    }
   } catch (err) {
-       document.body.innerHTML=`<div style="color:red">${err}</div>`
+        showMessage("Something went Wrong ..Try Again Later!!")
+      console.log(err)
   }
+}
+
+function showMessage(msg){
+    const showError=document.getElementById("error-message")
+     showError.textContent=msg
+     showError.style.display="block"
+     showError.style.color="red"
+
 }

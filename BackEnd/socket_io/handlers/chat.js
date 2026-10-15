@@ -7,9 +7,11 @@ module.exports=(socket,io)=>{
 
 
     socket.on("sendMessage",(data)=>{
-        console.log("User ",socket.user.username,"said: ",data)
+        console.log("User ",socket.user.username,"said: ",data.message)
 
-        io.emit("receiveMessage",data)
+        // io.emit("receiveMessage",data)
+
+        socket.broadcast.emit("receiveMessage",data)
     })
 
     socket.on("disconnect",()=>{

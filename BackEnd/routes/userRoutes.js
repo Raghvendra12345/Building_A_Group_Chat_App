@@ -4,6 +4,8 @@ const dbModel=require("../controllers/userController")
 
 const chatModel=require("../controllers/chatController")
 
+const privateChatController = require("../controllers/privateMessageController");
+
 const express=require("express")
 const userAuthentication=require('../middleware/auth')
 
@@ -16,6 +18,21 @@ route.post('/login',dbModel.login)
 
 route.post('/messages',userAuthentication,chatModel.sendMessage)
 route.get('/allmessages',userAuthentication,chatModel.getMessage)
+
+route.get('/search',userAuthentication,dbModel.searchUser)
+
+
+route.post(
+    "/private-messages",
+    userAuthentication,
+    privateChatController.sendPrivateMessage
+);
+
+route.get(
+    "/private-messages",
+    userAuthentication,
+    privateChatController.getPrivateMessages
+);
 
 
 module.exports=route

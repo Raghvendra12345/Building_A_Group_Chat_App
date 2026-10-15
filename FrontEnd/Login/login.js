@@ -18,12 +18,31 @@ async function handleFormSubmit(event) {
     });
     const data = await response.json();
 
-    if (response.status== 200) {
+    
+
+    if (response.ok && data.success) {
+
+      console.log("Login response:", data);
+    console.log("Email from response:", data.email);
       alert(data.message);
       localStorage.setItem("token", data.token);
+      localStorage.setItem("email", data.email);
+      localStorage.setItem("username", data.username);
       window.location.href="../chat/chat.html"
-    } else throw new Error("Failed to Login");
+      
+    } else{
+      showMessage(data.error || data.message || "Login Failed")
+    }
   } catch (err) {
-    document.body.innerHTML=`<div style color:"red">${err}</div>`
+       showMessage("Something went Wrong ..Try Again Later!!")
+      console.log(err)
   }
+}
+
+function showMessage(msg){
+    const showError=document.getElementById("error-message")
+     showError.textContent=msg
+     showError.style.display="block"
+     showError.style.color="red"
+
 }
