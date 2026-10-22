@@ -6,6 +6,8 @@ const chatModel=require("../controllers/chatController")
 
 const privateChatController = require("../controllers/privateMessageController");
 
+
+
 const express=require("express")
 const userAuthentication=require('../middleware/auth')
 
@@ -45,5 +47,7 @@ route.patch(
     userAuthentication,
     privateChatController.markPrivateMessagesAsRead
 );
+
+
 
 module.exports=route

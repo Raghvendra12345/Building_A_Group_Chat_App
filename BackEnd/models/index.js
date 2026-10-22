@@ -1,16 +1,22 @@
+const chat = require("./chatModel");
+const user = require("./userModel");
+const archivedChat = require("./archivedChatModel");
 
+user.hasMany(chat, {
+  foreignKey: "userId",
+});
 
-const chat=require("./chatModel")
-const user=require("./userModel")
+chat.belongsTo(user, {
+  foreignKey: "userId",
+});
 
+// Archived group messages
+user.hasMany(archivedChat, {
+  foreignKey: "userId",
+});
 
-user.hasMany(chat,{
-    foreignKey:"userId"
-})
+archivedChat.belongsTo(user, {
+  foreignKey: "userId",
+});
 
-chat.belongsTo(user,{
-    foreignKey:"userId"
-})
-
-
-module.exports={user,chat}
+module.exports = { user, chat, archivedChat };

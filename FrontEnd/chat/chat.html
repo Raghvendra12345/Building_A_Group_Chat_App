@@ -6,7 +6,7 @@
 
     <title>Chat App</title>
 
-    <link rel="stylesheet" href="./chat1.css" />
+    <link rel="stylesheet" href="./chat2.css" />
 
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   </head>
@@ -68,7 +68,18 @@
 
         <div id="typingIndicator" class="typing-indicator"></div>
 
-      
+        <div
+          id="privateAiSuggestions"
+          class="ai-suggestions"
+          aria-label="Predictive typing suggestions"
+        ></div>
+
+        <div
+          id="smartReplies"
+          class="smart-replies"
+          aria-label="AI smart replies"
+        ></div>
+
         <form id="privateMessageForm">
           <input
             type="text"
@@ -93,6 +104,12 @@
       <div class="messages" id="messages"></div>
 
       <div id="groupTypingIndicator" class="typing-indicator"></div>
+
+      <div
+        id="groupAiSuggestions"
+        class="ai-suggestions"
+        aria-label="Predictive typing suggestions"
+      ></div>
 
       <!-- Message Input -->
 

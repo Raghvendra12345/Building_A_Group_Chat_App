@@ -1,97 +1,9 @@
 const privateMessage = require("../models/personalChat");
 const { user } = require("../models/index");
-const { Op } = require("sequelize");
+const { Op ,fn,col} = require("sequelize");
 
 const { HeadObjectCommand } = require("@aws-sdk/client-s3");
 const s3 = require("../config/s3");
-
-// const sendPrivateMessage = async (req, res) => {
-//   try {
-//     const { receiverId, message } = req.body;
-
-//     if (!receiverId || !message || !message.trim()) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Receiver and message are required",
-//       });
-//     }
-
-//     if (Number(receiverId) === Number(req.user.userId)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "You cannot send a private message to yourself",
-//       });
-//     }
-
-//     const receiver = await user.findByPk(receiverId);
-
-//     if (!receiver) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Receiver not found",
-//       });
-//     }
-
-//     const savedMessage = await privateMessage.create({
-//       message: message.trim(),
-//       senderId: req.user.userId,
-//       receiverId: receiver.id,
-//     });
-
-//     const sender = await user.findByPk(req.user.userId, {
-//       attributes: ["id", "username"],
-//     });
-
-//     const messageData = {
-//       ...savedMessage.toJSON(),
-//       sender: {
-//         id: sender.id,
-//         username: sender.username,
-//       },
-//     };
-
-//     // Get the Socket.IO instance
-//     const io = req.app.get("io");
-
-//     // Send the saved message to the recipient's room
-//     // if (io) {
-//     //   io.to(`user:${receiver.id}`).emit("privateMessage", messageData);
-//     // }
-
-//     console.log("Socket.IO exists:", !!io);
-//     console.log("Receiver ID:", receiver.id);
-//     console.log("Target room:", `user:${receiver.id}`);
-//     console.log(
-//       "Sockets in target room:",
-//       io?.sockets.adapter.rooms.get(`user:${receiver.id}`)?.size ?? 0,
-//     );
-
-//     if (io) {
-//       io.to(`user:${receiver.id}`).emit("privateMessage", messageData);
-//       console.log("privateMessage event emitted");
-//     }
-
-//     // return res.status(201).json({
-//     //   success: true,
-//     //   data: {
-//     //     ...savedMessage.toJSON(),
-//     //     sender: sender,
-//     //   },
-//     // });
-//     return res.status(201).json({
-//       success: true,
-//       data: messageData,
-//     });
-//   } catch (error) {
-//     console.log(error.message);
-
-//     return res.status(500).json({
-//       success: false,
-//       message: "Failed to send private message",
-//     });
-//   }
-// };
-
 
 
 const sendPrivateMessage = async (req, res) => {
@@ -284,23 +196,24 @@ const getPrivateMessages = async (req, res) => {
 };
 
 
+
+
 const getConversations = async (req, res) => {
   try {
     const currentUserId = Number(req.user.userId);
 
-    // Find all private messages involving the logged-in user.
-    // Newest messages come first.
+    // Get all messages involving the current user.
     const messages = await privateMessage.findAll({
       where: {
         [Op.or]: [
           { senderId: currentUserId },
-          { receiverId: currentUserId }
-        ]
+          { receiverId: currentUserId },
+        ],
       },
-      order: [["createdAt", "DESC"]]
+      order: [["createdAt", "DESC"]],
     });
 
-    // Keep only the latest message for each conversation.
+    // Find the latest message for every conversation.
     const latestMessages = new Map();
 
     for (const item of messages) {
@@ -314,15 +227,14 @@ const getConversations = async (req, res) => {
       }
     }
 
-    // Fetch the other participants' usernames.
     const otherUserIds = [...latestMessages.keys()];
 
     const users = otherUserIds.length
       ? await user.findAll({
           where: {
-            id: { [Op.in]: otherUserIds }
-          }, 
-          attributes: ["id", "username"]
+            id: { [Op.in]: otherUserIds },
+          },
+          attributes: ["id", "username"],
         })
       : [];
 
@@ -330,23 +242,33 @@ const getConversations = async (req, res) => {
       users.map((person) => [Number(person.id), person])
     );
 
-    // Build the conversation list.
+    // Count unread messages in one grouped query.
+    const unreadRows = await privateMessage.findAll({
+      attributes: [
+        "senderId",
+        [fn("COUNT", col("id")), "unreadCount"],
+      ],
+      where: {
+        receiverId: currentUserId,
+        isRead: false,
+      },
+      group: ["senderId"],
+      raw: true,
+    });
+
+    const unreadBySender = new Map(
+      unreadRows.map((row) => [
+        Number(row.senderId),
+        Number(row.unreadCount),
+      ])
+    );
+
     const conversations = [];
 
     for (const [otherUserId, item] of latestMessages) {
       const person = usersById.get(otherUserId);
 
-      // Skip conversations whose other participant no longer exists.
       if (!person) continue;
-
-      // Count unread messages received from this participant.
-  const unreadCount = await privateMessage.count({
-    where: {
-      senderId: otherUserId,
-      receiverId: currentUserId,
-      isRead: false
-    }
-  });
 
       conversations.push({
         userId: person.id,
@@ -354,20 +276,20 @@ const getConversations = async (req, res) => {
         lastMessage: item.message,
         lastMessageTime: item.createdAt,
         lastMessageSenderId: item.senderId,
-        unreadCount: unreadCount
+        unreadCount: unreadBySender.get(otherUserId) || 0,
       });
     }
 
     return res.status(200).json({
       success: true,
-      data: conversations
+      data: conversations,
     });
   } catch (error) {
-    console.error("Get conversations error:", error.message);
+    console.error("Get conversations error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to load conversations"
+      message: "Failed to load conversations",
     });
   }
 };

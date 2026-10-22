@@ -52,6 +52,8 @@ messageInput.addEventListener("input", () => {
       isTyping: false,
     });
   }, 1000);
+
+  requestPredictiveSuggestions(messageInput, groupAiSuggestions, false);
 });
 
 const emailInput = document.getElementById("emailInput");
@@ -101,6 +103,9 @@ async function sendMessages(event) {
     socket.emit("sendMessage", data.data);
 
     messageInput.value = "";
+    clearSuggestions(groupAiSuggestions);
+    clearTimeout(groupAiTimer);
+    groupAiRequestId++;
     // Keep the latest message visible.
     messages.scrollTop = messages.scrollHeight;
   } catch (err) {
@@ -188,21 +193,6 @@ function logout() {
   window.location.href = "../Login/login.html";
 }
 
-// async function search(event){
-//     event.preventDefault()
-//      const myEmail=localStorage.getItem("email")
-
-//      if(!myEmail){
-//        alert("user email not found")
-//        return;
-//      }
-
-//      const email=event.target.search.value.trim().toLowerCase()
-
-//      socket.emit("join-room",email)
-
-//      alert("Room we Joined ",email)
-// }
 
 const conversationsList = document.getElementById("conversationsList");
 
@@ -227,6 +217,183 @@ backToGroupButton.addEventListener("click", () => {
 const privateMessageForm = document.getElementById("privateMessageForm");
 
 const privateMessageInput = document.getElementById("privateMessageInput");
+
+const groupAiSuggestions = document.getElementById("groupAiSuggestions");
+const privateAiSuggestions = document.getElementById("privateAiSuggestions");
+const smartRepliesContainer = document.getElementById("smartReplies");
+
+let groupAiTimer = null;
+let privateAiTimer = null;
+
+let groupAiRequestId = 0;
+let privateAiRequestId = 0;
+let smartReplyRequestId = 0;
+
+function clearSuggestions(container) {
+  container.replaceChildren();
+  container.classList.remove("visible");
+}
+
+function addSuggestionButtons(container, suggestions, input) {
+  container.replaceChildren();
+
+  if (!suggestions.length) {
+    container.classList.remove("visible");
+    return;
+  }
+
+  const label = document.createElement("span");
+  label.className = "ai-suggestion-label";
+  label.textContent = "AI suggestions";
+  container.appendChild(label);
+
+  suggestions.forEach((suggestion) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "ai-suggestion-button";
+    button.textContent = suggestion;
+
+    button.addEventListener("click", () => {
+      const currentText = input.value.trimEnd();
+
+      // Gemini returns continuations, so append them to the draft.
+      input.value = currentText ? `${currentText} ${suggestion}` : suggestion;
+
+      input.focus();
+      clearSuggestions(container);
+    });
+
+    container.appendChild(button);
+  });
+
+  container.classList.add("visible");
+}
+
+async function fetchPredictiveSuggestions(text, container, input, requestId) {
+  try {
+    const response = await fetch("http://localhost:4700/ai/predict", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({
+        text,
+        tone: "casual",
+      }),
+    });
+
+    const result = await response.json();
+
+    // Ignore an older response if the user has typed more since.
+    if (requestId() !== true) return;
+
+    if (!response.ok) {
+      throw new Error(result.message || "Suggestion request failed");
+    }
+
+    addSuggestionButtons(container, result.suggestions || [], input);
+  } catch (error) {
+    console.error("Predictive suggestions error:", error.message);
+    clearSuggestions(container);
+  }
+}
+
+function requestPredictiveSuggestions(input, container, isPrivate) {
+  const text = input.value.trim();
+
+  if (isPrivate) {
+    clearTimeout(privateAiTimer);
+  } else {
+    clearTimeout(groupAiTimer);
+  }
+
+  const requestNumber = isPrivate ? ++privateAiRequestId : ++groupAiRequestId;
+
+  clearSuggestions(container);
+
+  // Avoid calling Gemini for very short drafts.
+  if (text.length < 3) return;
+
+  const isLatestRequest = () =>
+    isPrivate
+      ? requestNumber === privateAiRequestId
+      : requestNumber === groupAiRequestId;
+
+  const timer = setTimeout(() => {
+    fetchPredictiveSuggestions(text, container, input, isLatestRequest);
+  }, 700);
+
+  if (isPrivate) {
+    privateAiTimer = timer;
+  } else {
+    groupAiTimer = timer;
+  }
+}
+
+async function fetchSmartReplies(incomingMessage) {
+  const requestNumber = ++smartReplyRequestId;
+
+  clearSuggestions(smartRepliesContainer);
+
+  try {
+    const response = await fetch("http://localhost:4700/ai/smart-replies", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({
+        message: incomingMessage,
+        tone: "casual",
+      }),
+    });
+
+    const result = await response.json();
+
+    // Don't show replies for an older message or a closed conversation.
+    if (
+      requestNumber !== smartReplyRequestId ||
+      !privateChatSection.contains(smartRepliesContainer) ||
+      privateChatSection.style.display === "none"
+    ) {
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error(result.message || "Smart replies failed");
+    }
+
+    if (!Array.isArray(result.replies)) return;
+
+    smartRepliesContainer.replaceChildren();
+
+    const label = document.createElement("span");
+    label.className = "ai-suggestion-label";
+    label.textContent = "Suggested replies";
+    smartRepliesContainer.appendChild(label);
+
+    result.replies.forEach((reply) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "smart-reply-button";
+      button.textContent = reply;
+
+      button.addEventListener("click", () => {
+        privateMessageInput.value = reply;
+        privateMessageInput.focus();
+        clearSuggestions(smartRepliesContainer);
+      });
+
+      smartRepliesContainer.appendChild(button);
+    });
+
+    smartRepliesContainer.classList.add("visible");
+  } catch (error) {
+    console.error("Smart replies error:", error.message);
+    clearSuggestions(smartRepliesContainer);
+  }
+}
 
 const privateMediaInput = document.getElementById("privateMediaInput");
 const sendMediaButton = document.getElementById("sendMediaButton");
@@ -253,8 +420,9 @@ privateMessageInput.addEventListener("input", () => {
       isTyping: false,
     });
   }, 1000);
-});
 
+  requestPredictiveSuggestions(privateMessageInput, privateAiSuggestions, true);
+});
 
 // sendMediaButton.addEventListener("click", async () => {
 //   if (!selectedUserId) {
@@ -351,7 +519,6 @@ privateMessageInput.addEventListener("input", () => {
 //   }
 // });
 
-
 socket.on("onlineUsers", (userIds) => {
   onlineUsers.clear();
 
@@ -412,32 +579,76 @@ socket.on("privateTyping", (data) => {
   typingIndicator.textContent = data.isTyping ? "Typing..." : "";
 });
 
+
+
 socket.on("privateMessage", async (item) => {
   console.log("Incoming private message:", item);
-  console.log("Current user ID:", currentUserId);
-  console.log("Selected user ID:", selectedUserId);
 
   const senderId = Number(item.senderId);
   const receiverId = Number(item.receiverId);
   const selectedId = Number(selectedUserId);
-
-  console.log("Selected user ID at message time:", selectedUserId);
-  console.log("Incoming sender ID:", item.senderId);
-  console.log("Incoming receiver ID:", item.receiverId);
+  const loggedInUserId = Number(currentUserId);
 
   const isCorrectConversation =
     selectedUserId !== null &&
-    ((senderId === currentUserId && receiverId === selectedId) ||
-      (senderId === selectedId && receiverId === currentUserId));
-
-  console.log("Is correct conversation:", isCorrectConversation);
+    selectedUserId !== undefined &&
+    (
+      (senderId === loggedInUserId && receiverId === selectedId) ||
+      (senderId === selectedId && receiverId === loggedInUserId)
+    );
 
   if (isCorrectConversation) {
-    displayPrivateMessage(item);
+    // Display the message in the currently open private chat.
+    await displayPrivateMessage(item);
+
+    // If the message is incoming, mark it as read immediately.
+    if (senderId !== loggedInUserId) {
+      try {
+        const response = await fetch(
+          "http://localhost:4700/chat/private-messages/read",
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({
+              senderId: senderId,
+            }),
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.message || "Failed to mark messages as read"
+          );
+        }
+
+        console.log(
+          "Incoming messages marked as read:",
+          result.updatedCount
+        );
+      } catch (error) {
+        console.error("Mark incoming messages as read error:", error.message);
+      }
+    }
+
+    // Generate smart replies only for incoming text messages.
+    if (
+      senderId !== loggedInUserId &&
+      (item.messageType || "text") === "text" &&
+      item.message
+    ) {
+      fetchSmartReplies(item.message);
+    }
   }
 
+  // Refresh only after the read request has completed.
   await loadConversations();
 });
+
 
 async function search(event) {
   event.preventDefault();
@@ -491,56 +702,6 @@ async function search(event) {
     alert(error.message);
   }
 }
-// privateMessageForm.addEventListener("submit", async (event) => {
-//   event.preventDefault();
-
-//   const message = privateMessageInput.value.trim();
-
-//   if (!message) return;
-
-//   if (!selectedUserId) {
-//     alert("Please select a user first");
-//     return;
-//   }
-
-//   try {
-//     const token = localStorage.getItem("token");
-
-//     const response = await fetch(
-//       "http://localhost:4700/chat/private-messages",
-//       {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: JSON.stringify({
-//           receiverId: selectedUserId,
-//           message: message,
-//         }),
-//       },
-//     );
-
-//     const data = await response.json();
-
-//     if (!response.ok) {
-//       throw new Error(data.message || "Failed to send private message");
-//     }
-
-//     const item = data.data;
-
-//     displayPrivateMessage(item);
-
-//     privateMessageInput.value = "";
-//     privateMessages.scrollTop = privateMessages.scrollHeight;
-
-//     console.log("Private message saved:", item);
-//     await loadConversations();
-//   } catch (error) {
-//     console.error("Private message error:", error.message);
-//     alert(error.message);
-//   }
-// });
 
 
 privateMessageForm.addEventListener("submit", async (event) => {
@@ -581,9 +742,7 @@ privateMessageForm.addEventListener("submit", async (event) => {
   }
 
   // Disable the one Send button while processing
-  const sendButton = privateMessageForm.querySelector(
-    'button[type="submit"]'
-  );
+  const sendButton = privateMessageForm.querySelector('button[type="submit"]');
 
   if (sendButton) {
     sendButton.disabled = true;
@@ -598,23 +757,18 @@ privateMessageForm.addEventListener("submit", async (event) => {
       const formData = new FormData();
       formData.append("media", file);
 
-      const uploadResponse = await fetch(
-        "http://localhost:4700/media/upload",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
+      const uploadResponse = await fetch("http://localhost:4700/media/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
       const uploadResult = await uploadResponse.json();
 
       if (!uploadResponse.ok) {
-        throw new Error(
-          uploadResult.message || "Media upload failed"
-        );
+        throw new Error(uploadResult.message || "Media upload failed");
       }
 
       mediaKey = uploadResult.media.key;
@@ -635,15 +789,13 @@ privateMessageForm.addEventListener("submit", async (event) => {
           messageType: messageType,
           mediaKey: mediaKey,
         }),
-      }
+      },
     );
 
     const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(
-        result.message || "Failed to send message"
-      );
+      throw new Error(result.message || "Failed to send message");
     }
 
     // Step 3: Display the saved message
@@ -652,6 +804,13 @@ privateMessageForm.addEventListener("submit", async (event) => {
     // Step 4: Clear both fields
     privateMessageInput.value = "";
     privateMediaInput.value = "";
+    // Step 5.6.B: Clear AI suggestions and cancel pending responses
+    clearSuggestions(privateAiSuggestions);
+    clearSuggestions(smartRepliesContainer);
+
+    clearTimeout(privateAiTimer);
+    privateAiRequestId++;
+    smartReplyRequestId++;
 
     privateMessages.scrollTop = privateMessages.scrollHeight;
 
@@ -680,7 +839,7 @@ async function loadPrivateMessages(otherUserId) {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      },
+      }
     );
 
     const data = await response.json();
@@ -691,46 +850,21 @@ async function loadPrivateMessages(otherUserId) {
 
     privateMessages.replaceChildren();
 
-    data.data.forEach((item) => {
-      displayPrivateMessage(item);
-    });
+    // Ensure messages are displayed from oldest to newest.
+    const messages = [...data.data].sort(
+      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+    );
+
+    // Wait for each message to finish rendering before displaying the next.
+    for (const item of messages) {
+      await displayPrivateMessage(item);
+    }
 
     privateMessages.scrollTop = privateMessages.scrollHeight;
   } catch (error) {
     console.error("Loading private messages failed:", error.message);
   }
 }
-
-// function displayPrivateMessage(item) {
-//   const isSent = Number(item.senderId) === currentUserId;
-
-//   const message = document.createElement("div");
-//   message.classList.add(
-//     "private-message",
-//     isSent ? "private-sent" : "private-received",
-//   );
-
-//   const bubble = document.createElement("div");
-//   bubble.classList.add("private-message-bubble");
-
-//   const messageText = document.createElement("p");
-//   messageText.textContent = item.message;
-
-//   const timestamp = document.createElement("span");
-//   timestamp.classList.add("private-timestamp");
-//   timestamp.textContent = new Date(
-//     item.createdAt || Date.now(),
-//   ).toLocaleTimeString([], {
-//     hour: "2-digit",
-//     minute: "2-digit",
-//   });
-
-//   bubble.append(messageText, timestamp);
-//   message.appendChild(bubble);
-//   privateMessages.appendChild(message);
-
-//   privateMessages.scrollTop = privateMessages.scrollHeight;
-// }
 
 
 
@@ -741,7 +875,7 @@ async function displayPrivateMessage(item) {
   const message = document.createElement("div");
   message.classList.add(
     "private-message",
-    isSent ? "private-sent" : "private-received"
+    isSent ? "private-sent" : "private-received",
   );
 
   const bubble = document.createElement("div");
@@ -765,7 +899,7 @@ async function displayPrivateMessage(item) {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       const result = await response.json();
@@ -809,7 +943,7 @@ async function displayPrivateMessage(item) {
   const timestamp = document.createElement("span");
   timestamp.classList.add("private-timestamp");
   timestamp.textContent = new Date(
-    item.createdAt || Date.now()
+    item.createdAt || Date.now(),
   ).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
@@ -821,7 +955,6 @@ async function displayPrivateMessage(item) {
 
   privateMessages.scrollTop = privateMessages.scrollHeight;
 }
-
 
 async function loadConversations() {
   try {
@@ -931,6 +1064,13 @@ function renderConversations() {
 async function openPrivateChat(selectedUser) {
   selectedUserId = Number(selectedUser.id);
   selectedUsername = selectedUser.username;
+
+  clearSuggestions(privateAiSuggestions);
+  clearSuggestions(smartRepliesContainer);
+
+  clearTimeout(privateAiTimer);
+  privateAiRequestId++;
+  smartReplyRequestId++;
 
   console.log("Private chat opened with:", selectedUser);
 

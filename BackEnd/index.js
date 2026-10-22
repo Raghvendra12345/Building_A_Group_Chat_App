@@ -4,6 +4,10 @@
 const chatModel=require("./models/chatModel")
 const mediaRoutes = require("./routes/media");
 
+const { archiveJob } = require("./jobs/archiveMessages");
+
+const aiRoutes = require("./routes/aiRoutes");
+
 const express=require("express")
 const cors=require("cors")
 
@@ -11,8 +15,12 @@ const app=express()
 
 const http=require("http")
 
+
+
 app.use(cors())
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }));
+app.use("/ai", aiRoutes);
 app.use("/media", mediaRoutes);
 
 const userDB=require('./utils/db')
@@ -45,7 +53,13 @@ app.get('/',(req,res)=>[
 userDB
 .sync({force:false})
 .then(()=>{
+
+    // Start the nightly archive job
+        archiveJob.start();
+        console.log("Message archive cron job started.");
       server.listen(PORT,()=>{
+
+        
         console.log("server is running fine")
     });
 })
