@@ -1,128 +1,113 @@
-
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>Chat App</title>
 
-    <link rel="stylesheet" href="./chat.css">
+    <link rel="stylesheet" href="./chat1.css" />
 
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <!-- Logout button -->
-    <button class="logout-button" onclick="logout()">
-        Logout
-    </button>
-
+    <button class="logout-button" onclick="logout()">Logout</button>
 
     <div class="chat-container">
+      <!-- Header -->
 
-        <!-- Header -->
+      <div class="chat-header">
+        <div class="profile">
+          <div class="profile-image">K</div>
 
-        <div class="chat-header">
-
-            <div class="profile">
-
-                <div class="profile-image">
-                    K
-                </div>
-
-                <div class="profile-info">
-                    <h3>Group Chat</h3>
-                    <span id="connection-status">
-                        Connecting...
-                    </span>
-                </div>
-
-            </div>
-
+          <div class="profile-info">
+            <h3>Group Chat</h3>
+            <span id="connection-status"> Connecting... </span>
+          </div>
         </div>
+      </div>
+      <!-- Private Conversation List -->
+      <section id="conversationsSection" class="conversations-section">
+        <h3>Private Conversations</h3>
 
-
-        <!-- Room Search -->
-
-        <div class="room-search">
-
-            <form id="searchForm" class="search-form">
-
-                <input
-                    type="email"
-                    id="emailInput"
-                    name="search"
-                    placeholder="Enter user's email"
-                    autocomplete="off"
-                    required
-                >
-
-                <button type="submit" id="joinRoomButton">
-                    Join
-                </button>
-
-            </form>
-
-            <div class="room-status">
-                <span id="room-status-text">
-                    Enter an email to join a chat
-                </span>
-            </div>
-
+        <div id="conversationsList">
+          <p>Loading conversations...</p>
         </div>
+      </section>
 
+      <!-- Room Search -->
 
-        <!-- Private Chat Section -->
-<section id="privateChatSection" style="display: none;">
-    <h2 id="privateChatTitle">Private Chat</h2>
+      <div class="room-search">
+        <form id="searchForm" class="search-form">
+          <input
+            type="email"
+            id="emailInput"
+            name="search"
+            placeholder="Enter user's email"
+            autocomplete="off"
+            required
+          />
 
-    <div id="privateMessages"></div>
+          <button type="submit" id="joinRoomButton">Join</button>
+        </form>
 
-    <form id="privateMessageForm">
-        <input
+        <div class="room-status">
+          <span id="room-status-text"> Enter an email to join a chat </span>
+        </div>
+      </div>
+
+      <!-- Private Chat Section -->
+      <section id="privateChatSection" style="display: none">
+        <h2 id="privateChatTitle">Private Chat</h2>
+
+        <button type="button" id="backToGroupButton">Back to Group Chat</button>
+
+        <div id="privateMessages"></div>
+
+        <div id="typingIndicator" class="typing-indicator"></div>
+
+      
+        <form id="privateMessageForm">
+          <input
             type="text"
             id="privateMessageInput"
             placeholder="Type a private message..."
-            required
-        />
-        <button type="submit">Send</button>
-    </form>
-</section>
+          />
 
+          <input
+            type="file"
+            id="privateMediaInput"
+            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,application/pdf"
+          />
 
-        <!-- Messages -->
+          <button type="submit">Send</button>
 
-        <div class="messages" id="messages">
-
-        </div>
-
-
-        <!-- Message Input -->
-
-        <form class="message-form" id="messageForm">
-
-            <input
-                type="text"
-                id="messageInput"
-                placeholder="Type a message..."
-                autocomplete="off"
-            >
-
-            <button type="submit">
-                ➤
-            </button>
-
+          <!-- <button type="button" id="sendMediaButton">Send Media</button> -->
         </form>
+      </section>
 
+      <!-- Messages -->
+
+      <div class="messages" id="messages"></div>
+
+      <div id="groupTypingIndicator" class="typing-indicator"></div>
+
+      <!-- Message Input -->
+
+      <form class="message-form" id="messageForm">
+        <input
+          type="text"
+          id="messageInput"
+          placeholder="Type a message..."
+          autocomplete="off"
+        />
+
+        <button type="submit">➤</button>
+      </form>
     </div>
 
-
     <script src="./chat1.js"></script>
-
-</body>
-
+  </body>
 </html>

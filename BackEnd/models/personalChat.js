@@ -21,6 +21,20 @@ const personalChat = sequelize.define("personalChat", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  isRead: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
+  messageType: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "text",
+  },
+  mediaKey: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 });
 
-module.exports=personalChat
+module.exports = personalChat;

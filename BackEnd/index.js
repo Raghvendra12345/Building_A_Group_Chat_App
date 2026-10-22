@@ -2,14 +2,18 @@
 
 
 const chatModel=require("./models/chatModel")
+const mediaRoutes = require("./routes/media");
 
 const express=require("express")
 const cors=require("cors")
 
 const app=express()
+
 const http=require("http")
 
 app.use(cors())
+app.use(express.json())
+app.use("/media", mediaRoutes);
 
 const userDB=require('./utils/db')
 const userRoute=require("./routes/userRoutes")
@@ -17,7 +21,7 @@ const socketIO=require("./socket_io")
 
 const  PORT=4700
 
-app.use(express.json())
+
 app.use('/chat',userRoute)
 
 

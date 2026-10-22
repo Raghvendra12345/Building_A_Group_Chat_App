@@ -34,5 +34,16 @@ route.get(
     privateChatController.getPrivateMessages
 );
 
+route.get(
+    "/conversations",
+    userAuthentication,
+    privateChatController.getConversations
+);
+
+route.patch(
+    "/private-messages/read",
+    userAuthentication,
+    privateChatController.markPrivateMessagesAsRead
+);
 
 module.exports=route

@@ -47,7 +47,7 @@ const signup=async(req,res)=>{
                 password:hash
             })
             res.status(201).json({message:"chatUser Created Successfully"})
-    })
+    });
 
 
 
