@@ -57,7 +57,7 @@ userDB
     // Start the nightly archive job
         archiveJob.start();
         console.log("Message archive cron job started.");
-      server.listen(PORT,()=>{
+      server.listen(PORT,"0.0.0.0",()=>{
 
         
         console.log("server is running fine")
